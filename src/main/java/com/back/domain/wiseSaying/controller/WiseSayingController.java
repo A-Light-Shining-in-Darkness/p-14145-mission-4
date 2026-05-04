@@ -26,15 +26,36 @@ public class WiseSayingController {
         System.out.println(ws.getId() + "번 명언이 등록되었습니다.");
     }
 
-    public void list() {
+    public void list(String keywordType, String keyword, int page) {
+        int pageSize = 5;
+
+        if (keyword != null && !keyword.isEmpty()) {
+            System.out.println("----------------------");
+            System.out.println("검색타입 : " + keywordType);
+            System.out.println("검색어 : " + keyword);
+            System.out.println("----------------------");
+        }
+
         System.out.println("번호 / 작가 / 명언");
         System.out.println("----------------------");
 
-        List<WiseSaying> wiseSayings = wiseSayingService.findAll();
-        for (int i = wiseSayings.size() - 1; i >= 0; i--) {
-            WiseSaying ws = wiseSayings.get(i);
+        List<WiseSaying> wiseSayings = wiseSayingService.findAll(keywordType, keyword, page, pageSize);
+        for (WiseSaying ws : wiseSayings) {
             System.out.println(ws.getId() + " / " + ws.getAuthor() + " / " + ws.getContent());
         }
+
+        System.out.println("----------------------");
+
+        int totalCount = wiseSayingService.count(keywordType, keyword);
+        int totalPages = Math.max(1, (int) Math.ceil((double) totalCount / pageSize));
+
+        StringBuilder pageIndicator = new StringBuilder("페이지 : ");
+        for (int i = 1; i <= totalPages; i++) {
+            if (i > 1) pageIndicator.append(" / ");
+            if (i == page) pageIndicator.append("[").append(i).append("]");
+            else pageIndicator.append(i);
+        }
+        System.out.println(pageIndicator);
     }
 
     public void delete(int id) {
@@ -64,5 +85,9 @@ public class WiseSayingController {
         String author = sc.nextLine();
 
         wiseSayingService.modify(id, content, author);
+    }
+
+    public void initSampleDataIfEmpty() {
+        wiseSayingService.initSampleDataIfEmpty();
     }
 }

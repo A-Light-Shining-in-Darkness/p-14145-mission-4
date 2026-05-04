@@ -17,8 +17,12 @@ public class WiseSayingService {
         return wiseSayingRepository.save(content, author);
     }
 
-    public List<WiseSaying> findAll() {
-        return wiseSayingRepository.findAll();
+    public List<WiseSaying> findAll(String keywordType, String keyword, int page, int pageSize) {
+        return wiseSayingRepository.findAll(keywordType, keyword, page, pageSize);
+    }
+
+    public int count(String keywordType, String keyword) {
+        return wiseSayingRepository.count(keywordType, keyword);
     }
 
     public Optional<WiseSaying> findById(int id) {
@@ -37,5 +41,13 @@ public class WiseSayingService {
         ws.setContent(content);
         ws.setAuthor(author);
         return true;
+    }
+
+    public void initSampleDataIfEmpty() {
+        if (count("", "") == 0) {
+            for (int i = 1; i <= 10; i++) {
+                write("명언 " + i, "작자미상 " + i);
+            }
+        }
     }
 }

@@ -3,25 +3,37 @@ package com.back;
 import com.back.domain.system.controller.SystemController;
 import com.back.domain.wiseSaying.controller.WiseSayingController;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class App {
     private final Scanner sc;
+    private final boolean withSampleData;
     private final SystemController systemController;
     private final WiseSayingController wiseSayingController;
 
     public App() {
-        this(new Scanner(System.in));
+        this(new Scanner(System.in), true);
     }
 
     public App(Scanner sc) {
+        this(sc, false);
+    }
+
+    private App(Scanner sc, boolean withSampleData) {
         this.sc = sc;
+        this.withSampleData = withSampleData;
         this.systemController = new SystemController();
         this.wiseSayingController = new WiseSayingController(sc);
     }
 
     public void run() {
+        if (withSampleData) {
+            wiseSayingController.initSampleDataIfEmpty();
+        }
+
         System.out.println("== 명언 앱 ==");
 
         while (true) {
@@ -31,7 +43,6 @@ public class App {
             try {
                 cmd = sc.nextLine().trim();
             } catch (NoSuchElementException e) {
-                // 입력이 끝났을 때 안전하게 종료
                 break;
             }
 
@@ -40,8 +51,12 @@ public class App {
                 break;
             } else if (cmd.equals("등록")) {
                 wiseSayingController.write();
-            } else if (cmd.equals("목록")) {
-                wiseSayingController.list();
+            } else if (cmd.startsWith("목록")) {
+                Map<String, String> params = parseQueryParams(cmd);
+                String keywordType = params.getOrDefault("keywordType", "");
+                String keyword = params.getOrDefault("keyword", "");
+                int page = Integer.parseInt(params.getOrDefault("page", "1"));
+                wiseSayingController.list(keywordType, keyword, page);
             } else if (cmd.startsWith("삭제?id=")) {
                 int id = Integer.parseInt(cmd.split("=")[1]);
                 wiseSayingController.delete(id);
@@ -50,5 +65,16 @@ public class App {
                 wiseSayingController.modify(id);
             }
         }
+    }
+
+    private Map<String, String> parseQueryParams(String cmd) {
+        Map<String, String> params = new HashMap<>();
+        int idx = cmd.indexOf('?');
+        if (idx == -1) return params;
+        for (String pair : cmd.substring(idx + 1).split("&")) {
+            String[] kv = pair.split("=", 2);
+            if (kv.length == 2) params.put(kv[0], kv[1]);
+        }
+        return params;
     }
 }

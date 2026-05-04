@@ -133,7 +133,81 @@ public class WiseSayingControllerTest {
                 종료
                 """);
 
-        // 종료가 정상적으로 처리되어 시작 메시지가 출력된 뒤 루프가 끝나야 한다
         assertThat(out).contains("== 명언 앱 ==");
+    }
+
+    @Test
+    @DisplayName("목록 - content 검색")
+    void t10() {
+        String out = AppTestRunner.run("""
+                등록
+                현재를 사랑하라.
+                작자미상
+                등록
+                과거에 집착하지 마라.
+                작자미상
+                목록?keywordType=content&keyword=과거
+                """);
+
+        assertThat(out)
+                .contains("검색타입 : content")
+                .contains("검색어 : 과거")
+                .contains("2 / 작자미상 / 과거에 집착하지 마라.")
+                .doesNotContain("1 / 작자미상 / 현재를 사랑하라.");
+    }
+
+    @Test
+    @DisplayName("목록 - author 검색")
+    void t11() {
+        String out = AppTestRunner.run("""
+                등록
+                현재를 사랑하라.
+                작자미상
+                등록
+                과거에 집착하지 마라.
+                홍길동
+                목록?keywordType=author&keyword=작자
+                """);
+
+        assertThat(out)
+                .contains("검색타입 : author")
+                .contains("검색어 : 작자")
+                .contains("1 / 작자미상 / 현재를 사랑하라.")
+                .doesNotContain("2 / 홍길동 / 과거에 집착하지 마라.");
+    }
+
+    @Test
+    @DisplayName("목록 - 페이징 1페이지")
+    void t12() {
+        StringBuilder input = new StringBuilder();
+        for (int i = 1; i <= 6; i++) {
+            input.append("등록\n명언 ").append(i).append("\n작자미상 ").append(i).append("\n");
+        }
+        input.append("목록\n");
+
+        String out = AppTestRunner.run(input.toString());
+
+        assertThat(out)
+                .contains("6 / 작자미상 6 / 명언 6")
+                .contains("2 / 작자미상 2 / 명언 2")
+                .doesNotContain("1 / 작자미상 1 / 명언 1")
+                .contains("페이지 : [1] / 2");
+    }
+
+    @Test
+    @DisplayName("목록 - 페이징 2페이지")
+    void t13() {
+        StringBuilder input = new StringBuilder();
+        for (int i = 1; i <= 6; i++) {
+            input.append("등록\n명언 ").append(i).append("\n작자미상 ").append(i).append("\n");
+        }
+        input.append("목록?page=2\n");
+
+        String out = AppTestRunner.run(input.toString());
+
+        assertThat(out)
+                .contains("1 / 작자미상 1 / 명언 1")
+                .doesNotContain("6 / 작자미상 6 / 명언 6")
+                .contains("페이지 : 1 / [2]");
     }
 }
